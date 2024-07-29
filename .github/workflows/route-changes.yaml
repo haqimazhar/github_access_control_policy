@@ -1,0 +1,54 @@
+name: Route Changes Check
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - master
+
+jobs:
+  check-route-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Check if branch starts with "hotfix" or "flight" and changes in /routes
+        id: check_branch_and_changes
+        run: |
+          branch_name="${{ github.head_ref }}"
+          echo "Branch name: $branch_name"
+          if [[ "$branch_name" =~ ^(hotfix|flight) ]]; then
+            echo "Branch name matches"
+            changes=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }})
+            echo "Changes: $changes"
+            if echo "$changes" | grep -q "^routes/"; then
+              echo "Changes detected in /routes"
+              echo "::set-output name=route_changes::true"
+            else
+              echo "No changes detected in /routes"
+              echo "::set-output name=route_changes::false"
+            fi
+          else
+            echo "Branch name does not match"
+            echo "::set-output name=route_changes::false"
+          fi
+
+      - name: Add comment if route changes detected
+        if: steps.check_branch_and_changes.outputs.route_changes == 'true'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const commentBody = `
+              ## Route Changes Detected
+              This pull request includes changes to the \`/routes\` folder. Please confirm and finalize these changes.
+              - **Confirmation required:** If these changes are confirmed, please respond to this comment with "confirmed".
+              - **Note:** The PR will not be merged until the changes are confirmed.
+            `;
+            await github.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: commentBody
+            });
