@@ -13,6 +13,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Fetch all branches
+        run: git fetch --all
+
       - name: Check if branch starts with "hotfix" or "flight" and changes in /routes
         id: check_branch_and_changes
         run: |
