@@ -24,7 +24,7 @@ jobs:
     - name: Fetch all branches
       run: git fetch --all
 
-    - name: Check for router changes
+      - name: Check for router changes
       run: |
         # Get the list of changed files compared to the base branch
         changed_files=$(git diff --name-only origin/dev | grep 'services/.*/routes/.*\.js' | grep -v 'services/.*/lambda/')
@@ -42,16 +42,22 @@ jobs:
 
         # Iterate over changed files and check for router changes
         for file in $changed_files; do
+          echo "Processing file: $file"
+          cat "$file"
           router_const=$(extract_router_const "$file")
           if [ -n "$router_const" ]; then
             echo "Found router constant '$router_const' in file '$file'"
             # Check if there are changes in router.* blocks
+            diff_command="git diff origin/dev \"$file\" | grep -P \"${router_const}\.\w+\(\""
+            echo "Running command: $diff_command"
             router_changes=$(git diff origin/dev "$file" | grep -P "${router_const}\.\w+\(")
             echo "Router changes: '$router_changes'"
             if [ -n "$router_changes" ]; then
               echo "Change detected in router block of file: $file"
               router_changes_detected=true
             fi
+          else
+            echo "No router constant found in file '$file'"
           fi
         done
 
