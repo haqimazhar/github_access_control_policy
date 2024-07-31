@@ -52,7 +52,6 @@ jobs:
               router_changes_detected=true
             fi
           fi
-        done
 
         # Check if any router changes were detected
         if [ "$router_changes_detected" = true ]; then
