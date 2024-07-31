@@ -24,7 +24,7 @@ jobs:
     - name: Fetch all branches
       run: git fetch --all
 
-      - name: Check for router changes
+    - name: Check for router changes
       run: |
         # Get the list of changed files compared to the base branch
         changed_files=$(git diff --name-only origin/dev | grep 'services/.*/routes/.*\.js' | grep -v 'services/.*/lambda/')
