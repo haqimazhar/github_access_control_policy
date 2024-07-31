@@ -3,7 +3,7 @@ const router = express.Router();
 const controllers = require('../app/controllers');
 const middlewares = require('../app/middlewares');
 
-const { ROUTE_NAMES } = CONSTANTS;
+const { ROUTE_NAMES } = CONSTANTSs;
 
 const {
     middleware: { cognitoAuthHandler }
