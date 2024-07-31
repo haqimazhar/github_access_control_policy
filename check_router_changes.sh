@@ -22,12 +22,23 @@ for file in $changed_files; do
   if [ -n "$router_const" ]; then
     echo "Found router constant '$router_const' in file '$file'"
     # Check if there are changes in router.* blocks
-    echo "Running command: git diff origin/dev \"$file\""
-    diff_output=$(git diff origin/dev "$file")
+    echo "Running command: git diff -U5 origin/dev \"$file\""
+    diff_output=$(git diff -U5 origin/dev "$file")
     echo "Diff output: $diff_output"
-    router_changes=$(echo "$diff_output" | grep -E "${router_const}\.[a-z]+\(")
-    echo "Router changes: '$router_changes'"
-    if [ -n "$router_changes" ]; then
+
+    # Check for changes within the router block
+    router_block_changes=$(echo "$diff_output" | awk '
+    BEGIN { inside_router_block = 0 }
+    {
+      if (inside_router_block) {
+        if ($0 ~ /^\s*\)/) { inside_router_block = 0 }
+        print $0
+      }
+      if ($0 ~ /'"${router_const}"'\.[a-z]+\(/) { inside_router_block = 1; print $0 }
+    }' | grep -E '^[+-]')
+
+    echo "Router block changes: '$router_block_changes'"
+    if [ -n "$router_block_changes" ]; then
       echo "Change detected in router block of file: $file"
       router_changes_detected=true
     fi
