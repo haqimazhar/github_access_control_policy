@@ -62,7 +62,6 @@ jobs:
           fi
         done
 
-
         # Check if any router changes were detected
         if [ "$router_changes_detected" = true ]; then
           echo "Router changes detected. Proceeding with the pipeline."
