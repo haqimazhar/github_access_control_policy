@@ -18,7 +18,7 @@ const authOptions = {
 };
 
 router.get(
-    '',
+    '/',
     [
         middlewares.http.service.initializeRouteName(ROUTE_NAMES.GET_INTEGRATIONS),
         cognitoAuthHandler(authOptions.cognito),
