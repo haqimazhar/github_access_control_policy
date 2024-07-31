@@ -23,7 +23,7 @@ jobs:
 
     - name: Fetch all branches
       run: git fetch --all
-      
+
     - name: Check for router changes
       run: |
         # Get the list of changed files compared to the base branch
@@ -46,6 +46,7 @@ jobs:
             echo "Found router constant '$router_const' in file '$file'"
             # Check if there are changes in router.* blocks
             router_changes=$(git diff origin/${{ github.event.pull_request.base.ref }} "$file" | grep -P "${router_const}\.\w+\(")
+            echo "$router_changes"
             if [ -n "$router_changes" ]; then
               echo "Change detected in router block of file: $file"
               router_changes_detected=true
@@ -53,13 +54,13 @@ jobs:
           fi
         done
 
-        # Check if any router changes were detected
-        if [ "$router_changes_detected" = true ]; then
-          echo "Router changes detected. Proceeding with the pipeline."
-          exit 0
-        else
-          echo "No relevant changes detected."
-          exit 1
+        # # Check if any router changes were detected
+        # if [ "$router_changes_detected" = true ]; then
+        #   echo "Router changes detected. Proceeding with the pipeline."
+        #   exit 0
+        # else
+        #   echo "No relevant changes detected."
+        #   exit 1
 
     - name: Continue only if router changes are detected
       if: success()
