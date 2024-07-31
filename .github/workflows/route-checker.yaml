@@ -54,13 +54,13 @@ jobs:
           fi
         done
 
-        # # Check if any router changes were detected
-        # if [ "$router_changes_detected" = true ]; then
-        #   echo "Router changes detected. Proceeding with the pipeline."
-        #   exit 0
-        # else
-        #   echo "No relevant changes detected."
-        #   exit 1
+        # Check if any router changes were detected
+        if [ "$router_changes_detected" = true ]; then
+          echo "Router changes detected. Proceeding with the pipeline."
+          exit 0
+        else
+          echo "No relevant changes detected."
+          exit 1
 
     - name: Continue only if router changes are detected
       if: success()
