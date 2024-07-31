@@ -5,8 +5,8 @@ on:
     branches:
       - dev
     paths:
-      - 'services/**/routes/**'
-      - '!services/**/lambda/**'
+      - 'my-express-app/services/**/routes/**'
+      - '!my-express-app/services/**/lambda/**'
 
 jobs:
   build:
