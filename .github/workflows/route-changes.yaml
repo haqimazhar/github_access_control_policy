@@ -5,6 +5,7 @@ on:
     branches:
       - dev
       - master
+      - main
 
 jobs:
   check-route-changes:
@@ -12,6 +13,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Fetch all branches
+        run: git fetch --all
+
       - name: Check if branch starts with "hotfix" or "flight" and changes in /routes
         id: check_branch_and_changes
         run: |
@@ -21,7 +26,7 @@ jobs:
             echo "Branch name matches"
             changes=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }})
             echo "Changes: $changes"
-            if echo "$changes" | grep -q "^routes/"; then
+            if echo "$changes" | grep -q "/routes/"; then
               echo "Changes detected in /routes"
               echo "::set-output name=route_changes::true"
             else

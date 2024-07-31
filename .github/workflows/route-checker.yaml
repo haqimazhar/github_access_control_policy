@@ -1,0 +1,70 @@
+name: Services Pipeline
+
+on:
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - 'my-express-app/services/**/routes/**'
+      - '!my-express-app/services/**/lambda/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Fetch all branches
+      run: git fetch --all
+
+    - name: Check for router changes
+      run: |
+        # Get the list of changed files compared to the base branch
+        changed_files=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }} | grep 'services/.*/routes/.*\.js' | grep -v 'services/.*/lambda/')
+        
+        # Function to extract router constant
+        extract_router_const() {
+          file=$1
+          router_const=$(grep -oP '(?<=const )\w+(?=\s*=\s*express\.Router\(\)\s*;)' "$file")
+          echo "$router_const"
+        }
+
+        # Initialize a flag to check if router changes are detected
+        router_changes_detected=false
+
+        # Iterate over changed files and check for router changes
+        for file in $changed_files; do
+          router_const=$(extract_router_const "$file")
+          if [ -n "$router_const" ]; then
+            echo "Found router constant '$router_const' in file '$file'"
+            # Check if there are changes in router.* blocks
+            router_changes=$(git diff origin/${{ github.event.pull_request.base.ref }} "$file" | grep -P "${router_const}\.\w+\(")
+            echo "$router_changes"
+            if [ -n "$router_changes" ]; then
+              echo "Change detected in router block of file: $file"
+              router_changes_detected=true
+            fi
+          fi
+        done
+
+        # # Check if any router changes were detected
+        # if [ "$router_changes_detected" = true ]; then
+        #   echo "Router changes detected. Proceeding with the pipeline."
+        #   exit 0
+        # else
+        #   echo "No relevant changes detected."
+        #   exit 1
+
+    - name: Continue only if router changes are detected
+      if: success()
+      run: |
+        echo "Router changes detected. Proceeding with the pipeline."
+        cd my-express-app
+        npm install
