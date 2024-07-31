@@ -9,7 +9,7 @@ on:
       - '!my-express-app/services/**/lambda/**'
 
 jobs:
-  build:
+  check-router-changes:
     runs-on: ubuntu-latest
 
     steps:
