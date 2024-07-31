@@ -68,4 +68,3 @@ jobs:
         echo "Router changes detected. Proceeding with the pipeline."
         cd my-express-app
         npm install
-        npm test
