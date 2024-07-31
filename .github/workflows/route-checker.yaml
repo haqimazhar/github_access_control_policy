@@ -60,7 +60,6 @@ jobs:
           else
             echo "No router constant found in file '$file'"
           fi
-        done
 
         # Check if any router changes were detected
         if [ "$router_changes_detected" = true ]; then
@@ -69,7 +68,7 @@ jobs:
         else
           echo "No relevant changes detected."
           exit 1
-          
+
     - name: Continue only if router changes are detected
       if: success()
       run: |
