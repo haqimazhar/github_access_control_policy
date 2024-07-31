@@ -21,6 +21,9 @@ jobs:
       with:
         node-version: '14'
 
+    - name: Fetch all branches
+      run: git fetch --all
+      
     - name: Check for router changes
       run: |
         # Get the list of changed files compared to the base branch
