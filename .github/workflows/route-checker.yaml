@@ -59,6 +59,7 @@ jobs:
           exit 0
         else
           echo "No relevant changes detected."
+          exit 0
 
     - name: Continue only if router changes are detected
       if: success()
