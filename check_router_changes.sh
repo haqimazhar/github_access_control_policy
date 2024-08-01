@@ -11,21 +11,22 @@ extract_router_const() {
   echo "$router_const"
 }
 
-# Function to capture changes in router block
+# Function to capture changes in router block and separate added and removed lines
 capture_router_block_changes() {
   diff_output=$1
   router_const=$2
 
-  # Use awk to capture the router block and check for changes
-  router_block_changes=$(echo "$diff_output" | awk -v router_const="$router_const" '
+  # Use awk to capture the router block and check for changes, then use grep to filter lines
+  changed=$(echo "$diff_output" | awk -v router_const="$router_const" '
   /^[-+ ]*router\.(get|post|put|patch|options|head)\(/ {flag=1}
-  flag && /^[+-]/ {print " " $0; next}
+  flag && /^[+-]/ {print $0; next}
   flag && /^[ ]/ {print; next}
-  /\);/ {flag=0}
-  ')
+  flag && /^\s*\);/ {flag=0}
+  ' | grep '^[+-]')
 
-  echo "Router block changes: '$router_block_changes'"
-  if [ -n "$router_block_changes" ]; then
+  echo -e "Changed lines:\n$changed"
+
+  if [ -n "$changed" ]; then
     return 0
   else
     return 1
@@ -44,7 +45,6 @@ for file in $changed_files; do
 
     # Get the diff output for the file
     diff_output=$(git diff --no-prefix -U1000 origin/dev "$file")
-    
 
     # Capture changes in router blocks using the extracted router constant
     if capture_router_block_changes "$diff_output" "$router_const"; then
