@@ -4,7 +4,10 @@ const router = express.Router();
 
 router.get('/', (req, res) => {
   res.send('Subfolder3 Route');
-  mala
+});
+
+router.delete('/', (req, res) => {
+  res.send('Subfolder3 Route');
 });
 
 module.exports = router;
