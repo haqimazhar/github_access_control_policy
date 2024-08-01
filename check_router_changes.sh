@@ -44,7 +44,7 @@ for file in $changed_files; do
 
     # Get the diff output for the file
     diff_output=$(git diff --no-prefix -U1000 origin/dev "$file")
-    echo "Diff output: $diff_output"
+    
 
     # Capture changes in router blocks using the extracted router constant
     if capture_router_block_changes "$diff_output" "$router_const"; then
