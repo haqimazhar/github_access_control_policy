@@ -18,9 +18,11 @@ capture_router_block_changes() {
 
   # Use awk to capture the router block and check for changes
   router_block_changes=$(echo "$diff_output" | awk -v router_const="$router_const" '
-  /router_const\.(get|post|put|patch|options|head|delete)\(/ {flag=1}
-  flag {print}
-  /);/ {flag=0}' | grep -E '^[+-]')
+  /^[-+ ]*router\.(get|post|put|patch|options|head)\(/ {flag=1}
+  flag && /^[+-]/ {print " " $0; next}
+  flag && /^[ ]/ {print; next}
+  /\);/ {flag=0}
+  ')
 
   echo "Router block changes: '$router_block_changes'"
   if [ -n "$router_block_changes" ]; then
@@ -41,7 +43,7 @@ for file in $changed_files; do
     echo "Found router constant '$router_const' in file '$file'"
 
     # Get the diff output for the file
-    diff_output=$(git diff origin/dev "$file")
+    diff_output=$(git diff --no-prefix -U1000 origin/dev "$file")
     echo "Diff output: $diff_output"
 
     # Capture changes in router blocks using the extracted router constant
