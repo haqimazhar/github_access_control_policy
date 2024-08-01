@@ -18,16 +18,9 @@ capture_router_block_changes() {
 
   # Use awk to capture the router block and check for changes
   router_block_changes=$(echo "$diff_output" | awk -v router_const="$router_const" '
-  BEGIN { inside_router_block = 0 }
-  {
-    if ($0 ~ /^[+-]/) {
-      if (inside_router_block) {
-        if ($0 ~ /^\s*\)/) { inside_router_block = 0 }
-        print $0
-      }
-      if ($0 ~ router_const "\\.(get|post|put|patch|options|head|delete)\\(") { inside_router_block = 1; print $0 }
-    }
-  }' | grep -E '^[+-]')
+  /router_const\.(get|post|put|patch|options|head|delete)\(/ {flag=1}
+  flag {print}
+  /);/ {flag=0}' | grep -E '^[+-]')
 
   echo "Router block changes: '$router_block_changes'"
   if [ -n "$router_block_changes" ]; then
