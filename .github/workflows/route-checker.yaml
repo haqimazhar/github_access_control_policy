@@ -16,8 +16,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: fetch code
-      uses: git pull -a
+    - name: Fetch code
+      run: git fetch --all
 
     - name: Run check for router changes
       id: check-routes
