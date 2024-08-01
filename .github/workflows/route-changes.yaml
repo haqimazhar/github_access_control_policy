@@ -8,52 +8,56 @@ on:
       - main
 
 jobs:
-  check-route-changes:
+  check-routes:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Fetch all branches
-        run: git fetch --all
+    - name: Run check for router changes
+      id: check-routes
+      run: |
+        # Run the shell script and capture the result
+        ./check_router_changes.sh
+        echo "router_changes_detected=$?" >> $GITHUB_ENV
 
-      - name: Check if branch starts with "hotfix" or "flight" and changes in /routes
-        id: check_branch_and_changes
-        run: |
-          branch_name="${{ github.head_ref }}"
-          echo "Branch name: $branch_name"
-          if [[ "$branch_name" =~ ^(hotfix|flight) ]]; then
-            echo "Branch name matches"
-            changes=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }})
-            echo "Changes: $changes"
-            if echo "$changes" | grep -q "/routes/"; then
-              echo "Changes detected in /routes"
-              echo "::set-output name=route_changes::true"
-            else
-              echo "No changes detected in /routes"
-              echo "::set-output name=route_changes::false"
-            fi
-          else
-            echo "Branch name does not match"
-            echo "::set-output name=route_changes::false"
-          fi
+    - name: Add comment if route changes detected
+      if: env.router_changes_detected == '0'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const prNumber = context.payload.pull_request.number;
+          const commentBody = `
+            ## Route Changes Detected
+            This pull request includes changes to the \`/routes\` folder. Please review and confirm these changes.
+            - **Status:** Review required
+          `;
+          await github.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: prNumber,
+            body: commentBody
+          });
 
-      - name: Add comment if route changes detected
-        if: steps.check_branch_and_changes.outputs.route_changes == 'true'
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const prNumber = context.payload.pull_request.number;
-            const commentBody = `
-              ## Route Changes Detected
-              This pull request includes changes to the \`/routes\` folder. Please confirm and finalize these changes.
-              - **Confirmation required:** If these changes are confirmed, please respond to this comment with "confirmed".
-              - **Note:** The PR will not be merged until the changes are confirmed.
-            `;
-            await github.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              body: commentBody
-            });
+    - name: Set PR status to review required
+      if: env.router_changes_detected == '0'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const prNumber = context.payload.pull_request.number;
+          await github.repos.createCommitStatus({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            sha: context.sha,
+            state: 'failure',
+            target_url: '',
+            description: 'Route changes detected, review required',
+            context: 'Route Changes Check'
+          });
+
+    - name: No route changes detected
+      if: env.router_changes_detected != '0'
+      run: echo "No route changes detected, PR can proceed."
