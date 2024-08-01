@@ -3,11 +3,9 @@ const express = require('express');
 const router = express.Router();
 
 router.get('/', (req, res) => {
-  res.send('Subfolder3 Route');
+  res.send('Subfolder3 Routelol');
 });
 
-router.delete('/', (req, res) => {
-  res.send('Subfolder3 Route');
-});
+
 
 module.exports = router;
