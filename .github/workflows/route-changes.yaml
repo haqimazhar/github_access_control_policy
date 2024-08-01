@@ -21,7 +21,7 @@ jobs:
         # Run the shell script and capture the result
         ./check_router_changes.sh
         echo "router_changes_detected=$?" >> $GITHUB_ENV
-
+        
     - name: Add comment if route changes detected
       if: env.router_changes_detected == '0'
       uses: actions/github-script@v6
