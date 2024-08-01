@@ -1,11 +1,12 @@
-name: Route Changes Check
+name: Services Pipeline
 
 on:
   pull_request:
     branches:
       - dev
-      - master
-      - main
+    paths:
+      - 'my-express-app/services/**/routes/**'
+      - '!my-express-app/services/**/lambda/**'
 
 jobs:
   check-routes:
@@ -13,7 +14,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+
+    - name: Fetch code
+      run: git fetch --all
 
     - name: Run check for router changes
       id: check-routes
@@ -21,25 +25,25 @@ jobs:
         # Run the shell script and capture the result
         ./check_router_changes.sh
         echo "router_changes_detected=$?" >> $GITHUB_ENV
-        
+
     - name: Add comment if route changes detected
       if: env.router_changes_detected == '0'
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          const prNumber = context.payload.pull_request.number;
-          const commentBody = `
-            ## Route Changes Detected
-            This pull request includes changes to the \`/routes\` folder. Please review and confirm these changes.
-            - **Status:** Review required
-          `;
-          await github.issues.createComment({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: prNumber,
-            body: commentBody
-          });
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+            script: |
+                const prNumber = context.payload.pull_request.number;
+                const commentBody = `
+                    ## Route Changes Detected
+                    This pull request includes changes to the \`/routes\` folder. Please review and confirm these changes.
+                    - **Status:** Review required
+                `;
+                await github.rest.issues.createComment({
+                    issue_number: prNumber,
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    body: commentBody
+                });
 
     - name: Set PR status to review required
       if: env.router_changes_detected == '0'
