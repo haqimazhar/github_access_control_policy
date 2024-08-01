@@ -17,13 +17,16 @@ capture_router_block_changes() {
   router_const=$2
 
   # Use awk to capture the router block and check for changes, then use grep to filter lines
-  changed=$(echo "$diff_output" | awk -v router_const="$router_const" '
+  route_update=$(echo "$diff_output" | awk -v router_const="$router_const" '
   /^[-+ ]*router\.(get|post|put|patch|options|head)\(/ {flag=1}
   flag && /^[+-]/ {print $0; next}
   flag && /^[ ]/ {print; next}
   flag && /^\s*\);/ {flag=0}
   ' | grep '^[+-]')
+  
+  echo "Route update: $route_update"
 
+  changed=$(echo route_update | grep '^[+-]') 
   echo -e "Changed lines:\n$changed"
 
   if [ -n "$changed" ]; then
