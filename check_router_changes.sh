@@ -22,11 +22,11 @@ capture_router_block_changes() {
   flag && /^[+-]/ {print $0; next}
   flag && /^[ ]/ {print; next}
   flag && /^\s*\);/ {flag=0}
-  ' | grep '^[+-]')
+  ')
   
   echo "Route update: $route_update"
 
-  changed=$(echo route_update | grep '^[+-]') 
+  changed=$(echo $route_update | grep '^[+-]') 
   echo -e "Changed lines:\n$changed"
 
   if [ -n "$changed" ]; then
