@@ -13,13 +13,22 @@ extract_router_const() {
 
 # Function to capture changes in router block
 capture_router_block_changes() {
-  file=$1
-  diff_output=$2
-  router_const=$3
+  diff_output=$1
+  router_const=$2
 
-  # Use grep to capture the router block and check for changes
-  router_block_changes=$(echo "$diff_output" | grep -Pzo "(?s)^.*(?=${router_const}\.[a-z]+\().*?\).*" | grep -E '^[+-]')
-  
+  # Use awk to capture the router block and check for changes
+  router_block_changes=$(echo "$diff_output" | awk -v router_const="$router_const" '
+  BEGIN { inside_router_block = 0 }
+  {
+    if ($0 ~ /^[+-]/) {
+      if (inside_router_block) {
+        if ($0 ~ /^\s*\)/) { inside_router_block = 0 }
+        print $0
+      }
+      if ($0 ~ router_const "\\.(get|post|put|patch|options|head|delete)\\(") { inside_router_block = 1; print $0 }
+    }
+  }' | grep -E '^[+-]')
+
   echo "Router block changes: '$router_block_changes'"
   if [ -n "$router_block_changes" ]; then
     return 0
@@ -43,7 +52,7 @@ for file in $changed_files; do
     echo "Diff output: $diff_output"
 
     # Capture changes in router blocks using the extracted router constant
-    if capture_router_block_changes "$file" "$diff_output" "$router_const"; then
+    if capture_router_block_changes "$diff_output" "$router_const"; then
       echo "Change detected in router block of file: $file"
       router_changes_detected=true
     fi
